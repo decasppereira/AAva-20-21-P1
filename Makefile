@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wpedantic -Wconversion -Wsign-conversion -Wnull-dereference -Wdouble-promotion
+CiFLAGS = -O3 -ansi -Wall -Wextra -Wshadow -Wcast-align -Wunused -Wpedantic -Wconversion -Wsign-conversion -Wnull-dereference -Wdouble-promotion
 
 CFLAGS += -fsanitize=address,leak
 #CFLAGS += -fsanitize=thread
@@ -24,4 +24,4 @@ test: project
 	@sbin/test.sh
 
 clean:
-	@rm -f project project.o
+	@rm -f project project.o out.txt
