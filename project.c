@@ -28,7 +28,7 @@ void buildPi_KMP(int *pi, char *P, int P_size);
 void BMMatch(char *T, char *P, int T_size, int P_size);
 int charPosition_BM(char c);
 void buildR_BM(int *R, char* P, int P_size);
-void buildL_BM(int *L, char* P, int P_size);
+void buildL_BM(int *L, int *l, char* P, int P_size);
 void buildNj_BM(int *Nj, char* P, int P_size);
 /* --------------------------------------------------------- */
 
@@ -229,27 +229,45 @@ void buildR_BM(int *R, char* P, int P_size){
 }
 
 /*
-Builds the L' array for the Boyer-Moore Algorithm
+Builds the L' and l' arrays for the Boyer-Moore Algorithm
 */
-void buildL_BM(int *L, char* P, int P_size){
+void buildL_BM(int *L, int *l, char* P, int P_size){
     int Nj[P_size];
     buildNj_BM(Nj, P, P_size);
     int j;
     int i;
-    for(int i = 0; i<P_size; i++){
+    for(i = 0; i<P_size; i++){
         L[i] = 0;
+        l[i] = 0;
     }
-
+    /* Builds L' array*/
     for(j=0; j< P_size -1; j++){
         i = P_size - Nj[j] - 1;
         L[i] = j;
     }
-     int c;
+    i = 0;
+    /* Builds l' array from the Nj array*/
+    for(j=P_size; j > 0; j--){
+        if(Nj[j-1] == j){
+            while(j <= P_size -i){
+                l[i] = j;
+                i++;
+            }
+        }
+    }
+    
+    /*int c;
     printf("L': [");
     for (c = 0; c <P_size; c++){
         printf(" %d", L[c]);
     }
     printf(" ]\n");
+   
+    printf("l': [");
+    for (c = 0; c <P_size; c++){
+        printf(" %d", l[c]);
+    }
+    printf(" ]\n");*/
 }
 
 /*
@@ -262,7 +280,6 @@ void buildNj_BM(int *Nj, char* P, int P_size){
         int k = j;
         int length = 0;
         while((k >= 0) && (P[k] == P[i])){
-            /*printf("Here! P[%d] = %c and P[%d] = %c\n", k, P[k], i, P[i]);*/
             length++;
             k--;
             i--;
@@ -301,10 +318,58 @@ int charPosition_BM(char c){
 }
 
 void BMMatch(char *T, char *P, int T_size, int P_size){
+    /*PRE PROCESSING STAGE*/
     int R[ALPHSIZE];
     buildR_BM(R, P, P_size);
     int L[P_size];
-    buildL_BM(L, P, P_size);
-    
-    
+    int l[P_size];
+    buildL_BM(L, l,P, P_size);
+
+    /*SEARCH STAGE*/
+    int k = P_size-1;
+    int i;
+    int h;
+    int n_comp = 0;
+    int shift_gs = 0;
+    int shift_bc = 0;
+    int shift = 0;
+    while(k < T_size){
+        i = P_size - 1;
+        h = k;
+        while((i>=0) && (P[i] == T[h])){ /*While Match*/
+            /* increase comp */
+            i --;
+            h--;
+            n_comp++;
+        }
+        if(i==-1){ /*FINAL MATCH*/
+            printf("%d ", k-P_size+1);
+            k = k + P_size - l[1];
+        }
+        else{
+            /*Shift P according to one of the two rules: Bad character or good suffix*/
+            /* increase comp */
+            if (i == P_size - 1)
+                shift_gs = 1;
+            else{
+                if(L[i+1] > 0)
+                    shift_gs = P_size - L[i+1];
+
+                if( L[i+1] == 0)
+                    shift_gs = P_size - l[i+1];
+            }
+
+            if(R[charPosition_BM(T[h])] == -1)
+                shift_bc = P_size;
+            else    
+                shift_bc = ( 1 < i - R[charPosition_BM(T[h])])? R[charPosition_BM(T[h])] : 1;
+
+            shift = (shift_gs > shift_bc)? shift_gs : shift_bc;
+            k += (shift > 0)? shift : 1;
+            n_comp++;
+        }
+        /*printf("k:%d\n",k);*/
+    }
+
+    printf("\n%d \n", n_comp);
 }
