@@ -18,7 +18,6 @@
 /* --------------------------------------------------------- */
 char* saveNewString(char *S, int *S_cap, int *S_size);
 char* increaseMemory(char* S, int *S_cap);
-void decreaseMemory(char* S, int *S_cap);
 
 void naiveMatch(char *T, char *P);
 
@@ -135,9 +134,6 @@ char* increaseMemory(char* S, int *S_cap){
     return S;
 }
 
-void decreaseMemory(char* S, int *S_cap){
-    
-}
 
 void naiveMatch(char *T, char *P){
     int i = 0;                  /* iterates over T */
@@ -227,13 +223,6 @@ void buildR_BM(int *R, char* P, int P_size){
             R[charPosition_BM(P[i])] = i;
         i--;
     }  
-
-    /*int c;
-    printf("Bad character table': [");
-    for (c = 0; c < ALPHSIZE; c++){
-        printf(" %d", R[c]);
-    }
-    printf(" ]\n");*/
 }
 
 /*
@@ -252,31 +241,18 @@ void buildL_BM(int *L, int *l, char* P, int P_size){
     for(j=0; j< P_size -1; j++){
         i = P_size - Nj[j];
         if((i>=0) && (i<P_size))
-            L[i] = j;
+            L[i] = j+1;
     }
     i = 0;
     /* Builds l' array from the Nj array*/
-    for(j=P_size; j > 0; j--){
-        if(Nj[j-1] == j){
-            while(j <= P_size -i){
-                l[i] = j;
+    for(j=P_size-1; j >= 0; j--){
+        if(Nj[j] == j+1){
+            while(j < P_size -i){
+                l[i] = j+1;
                 i++;
             }
         }
     }
-    
-    int c;
-    printf("L': [");
-    for (c = 0; c <P_size; c++){
-        printf(" %d", L[c]);
-    }
-    printf(" ]\n");
-   
-    printf("l': [");
-    for (c = 0; c <P_size; c++){
-        printf(" %d", l[c]);
-    }
-    printf(" ]\n");
 }
 
 /*
@@ -296,12 +272,6 @@ void buildNj_BM(int *Nj, char* P, int P_size){
         Nj[j] = length;
         i = P_size - 1;
     }
-    /*int c;
-    printf("Nj: [");
-    for (c = 0; c <P_size; c++){
-        printf(" %d", Nj[c]);
-    }
-    printf(" ]\n");*/
 }
 
 int charPosition_BM(char c){
@@ -332,7 +302,7 @@ void BMMatch(char *T, char *P, int T_size, int P_size){
     buildR_BM(R, P, P_size);
     int L[P_size];
     int l[P_size];
-    buildL_BM(L, l,P, P_size);
+    buildL_BM(L, l, P, P_size);
 
     /*SEARCH STAGE*/
     int k = P_size-1;
@@ -354,7 +324,7 @@ void BMMatch(char *T, char *P, int T_size, int P_size){
         }
         if(i==-1){ /*FINAL MATCH*/
             printf("%d ", k-P_size+1);
-            k = k + P_size - l[1];
+            k = k + P_size - l[1]; 
         }
         else{
             /*Shift P according to one of the two rules: Bad character or good suffix*/
@@ -364,18 +334,15 @@ void BMMatch(char *T, char *P, int T_size, int P_size){
             else{
                 if(L[i+1] > 0){
                     shift_gs = P_size - L[i+1];
-                    /*printf("Shift GS was decided with L'\n");*/
                 }
-                    
 
                 if( L[i+1] == 0){
                     shift_gs = P_size - l[i+1];
-                    /*printf("Shift GS was decided with l'\n");*/
                 }
             }
 
             if(R[charPosition_BM(T[k])] == -1){
-                shift_bc = P_size;
+                shift_bc = i+1;
             }  
             else 
                 shift_bc = ( 0 <= i - R[charPosition_BM(T[h])])? i - R[charPosition_BM(T[h])] : 1;
@@ -384,7 +351,6 @@ void BMMatch(char *T, char *P, int T_size, int P_size){
             k += (shift > 0)? shift : 1; 
             n_comp++;
 
-            /*printf("Shifting by %d positions to k=%d. Shift BC: %d and Shift GS:%d\n", shift, k, shift_bc, shift_gs);*/
         }
     }
 
