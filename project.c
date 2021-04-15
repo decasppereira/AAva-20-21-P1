@@ -148,6 +148,7 @@ void naiveMatch(char *T, char *P){
     while (T[i] != '\0'){
         j = 0;
         p = P[0];
+        match = true;
         while( p != '\0'){
             if(T[i+j] != p){
                 match = false;
@@ -225,7 +226,14 @@ void buildR_BM(int *R, char* P, int P_size){
         if(R[charPosition_BM(P[i])] == -1)
             R[charPosition_BM(P[i])] = i;
         i--;
-    }   
+    }  
+
+    /*int c;
+    printf("Bad character table': [");
+    for (c = 0; c < ALPHSIZE; c++){
+        printf(" %d", R[c]);
+    }
+    printf(" ]\n");*/
 }
 
 /*
@@ -242,8 +250,9 @@ void buildL_BM(int *L, int *l, char* P, int P_size){
     }
     /* Builds L' array*/
     for(j=0; j< P_size -1; j++){
-        i = P_size - Nj[j] - 1;
-        L[i] = j;
+        i = P_size - Nj[j];
+        if((i>=0) && (i<P_size))
+            L[i] = j;
     }
     i = 0;
     /* Builds l' array from the Nj array*/
@@ -256,7 +265,7 @@ void buildL_BM(int *L, int *l, char* P, int P_size){
         }
     }
     
-    /*int c;
+    int c;
     printf("L': [");
     for (c = 0; c <P_size; c++){
         printf(" %d", L[c]);
@@ -267,7 +276,7 @@ void buildL_BM(int *L, int *l, char* P, int P_size){
     for (c = 0; c <P_size; c++){
         printf(" %d", l[c]);
     }
-    printf(" ]\n");*/
+    printf(" ]\n");
 }
 
 /*
@@ -287,12 +296,12 @@ void buildNj_BM(int *Nj, char* P, int P_size){
         Nj[j] = length;
         i = P_size - 1;
     }
-    int c;
+    /*int c;
     printf("Nj: [");
     for (c = 0; c <P_size; c++){
         printf(" %d", Nj[c]);
     }
-    printf(" ]\n");
+    printf(" ]\n");*/
 }
 
 int charPosition_BM(char c){
@@ -333,6 +342,7 @@ void BMMatch(char *T, char *P, int T_size, int P_size){
     int shift_gs = 0;
     int shift_bc = 0;
     int shift = 0;
+
     while(k < T_size){
         i = P_size - 1;
         h = k;
@@ -349,26 +359,33 @@ void BMMatch(char *T, char *P, int T_size, int P_size){
         else{
             /*Shift P according to one of the two rules: Bad character or good suffix*/
             /* increase comp */
-            if (i == P_size - 1)
+            if (i == P_size - 1) 
                 shift_gs = 1;
             else{
-                if(L[i+1] > 0)
+                if(L[i+1] > 0){
                     shift_gs = P_size - L[i+1];
+                    /*printf("Shift GS was decided with L'\n");*/
+                }
+                    
 
-                if( L[i+1] == 0)
+                if( L[i+1] == 0){
                     shift_gs = P_size - l[i+1];
+                    /*printf("Shift GS was decided with l'\n");*/
+                }
             }
 
-            if(R[charPosition_BM(T[h])] == -1)
+            if(R[charPosition_BM(T[k])] == -1){
                 shift_bc = P_size;
-            else    
-                shift_bc = ( 1 < i - R[charPosition_BM(T[h])])? R[charPosition_BM(T[h])] : 1;
+            }  
+            else 
+                shift_bc = ( 0 <= i - R[charPosition_BM(T[h])])? i - R[charPosition_BM(T[h])] : 1;
 
             shift = (shift_gs > shift_bc)? shift_gs : shift_bc;
-            k += (shift > 0)? shift : 1;
+            k += (shift > 0)? shift : 1; 
             n_comp++;
+
+            /*printf("Shifting by %d positions to k=%d. Shift BC: %d and Shift GS:%d\n", shift, k, shift_bc, shift_gs);*/
         }
-        /*printf("k:%d\n",k);*/
     }
 
     printf("\n%d \n", n_comp);
